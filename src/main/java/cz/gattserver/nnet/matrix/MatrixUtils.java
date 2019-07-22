@@ -12,7 +12,7 @@ public class MatrixUtils {
 		return matrix;
 	}
 
-	public static Matrix fromFlatArray(int rows, int cols, float[] array) {
+	public static Matrix fromFlatArray(int rows, int cols, double[] array) {
 		Matrix matrix = new Matrix(rows, cols);
 		int i = 0;
 		for (int r = 0; r < rows; r++) {

@@ -4,17 +4,17 @@ public class Matrix {
 
 	private int rows = 0;
 	private int cols = 0;
-	private float data[][];
+	private double data[][];
 
-	public interface MapFunc {
-		public float map(float value);
+	public static interface MapFunc {
+		double map(double value);
 	}
 
 	public Matrix(int rows, int cols) {
 		this.rows = rows;
 		this.cols = cols;
 		// indexově jsou nejprve řádky, pak sloupce
-		data = new float[rows][cols];
+		data = new double[rows][cols];
 		for (int r = 0; r < rows; r++)
 			for (int c = 0; c < cols; c++)
 				data[r][c] = 0;
@@ -42,8 +42,8 @@ public class Matrix {
 		}
 	}
 
-	public float[] toArray() {
-		float result[] = new float[rows * cols];
+	public double[] toArray() {
+		double result[] = new double[rows * cols];
 		for (int r = 0; r < rows; r++)
 			for (int c = 0; c < cols; c++)
 				result[r * cols + c] = data[r][c];
@@ -58,12 +58,12 @@ public class Matrix {
 		return cols;
 	}
 
-	public float get(int row, int col) {
+	public double get(int row, int col) {
 		checkDimensions(row, col);
 		return data[row][col];
 	}
 
-	public void set(int row, int col, float value) {
+	public void set(int row, int col, double value) {
 		checkDimensions(row, col);
 		data[row][col] = value;
 	}
@@ -85,7 +85,7 @@ public class Matrix {
 		return this.add(m2);
 	}
 
-	public Matrix addScalar(float n) {
+	public Matrix addScalar(double n) {
 		Matrix result = new Matrix(rows, cols);
 		for (int r = 0; r < rows; r++)
 			for (int c = 0; c < cols; c++)
@@ -96,10 +96,10 @@ public class Matrix {
 	public Matrix multiply(Matrix m) {
 		if (m.getRows() != cols)
 			throw new IllegalArgumentException("A.B requires A.cols = B.rows");
-		Matrix result = new Matrix(rows, cols);
+		Matrix result = new Matrix(rows, m.getCols());
 		for (int r = 0; r < result.getRows(); r++) {
 			for (int c = 0; c < result.getCols(); c++) {
-				float sum = 0;
+				double sum = 0;
 				for (int i = 0; i < cols; i++)
 					sum += data[r][i] * m.get(i, c);
 				result.set(r, c, sum);
@@ -120,7 +120,7 @@ public class Matrix {
 		return result;
 	}
 
-	public Matrix multiplyByScalar(float n) {
+	public Matrix multiplyByScalar(double n) {
 		Matrix result = new Matrix(rows, cols);
 		for (int r = 0; r < rows; r++)
 			for (int c = 0; c < cols; c++)
