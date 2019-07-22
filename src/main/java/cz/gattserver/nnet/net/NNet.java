@@ -145,7 +145,7 @@ public class NNet {
 	}
 
 	public double getSuccessRate() {
-		return successCount / triesCount * 100;
+		return (double) successCount / triesCount * 100;
 	}
 
 }
