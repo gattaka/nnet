@@ -71,36 +71,35 @@ public class Main {
 			NNet net = new NNet(new int[] { pixels, results * 2, results * 2, results }, new SmoothReLU());
 
 			int imagesProcessed = 0;
-			
-			while (imagesProcessed < imageCount) {
-				double[][] trainBatchInputs = new double[batchSize][pixels];
-				double[][] trainBatchOutputs = new double[batchSize][results];
-				for (int b = 0; b < batchSize; b++) {
 
-					imagesProcessed++;
-					if (imagesProcessed > imageCount)
-						break;
+			double[][] trainBatchInputs = new double[batchSize][pixels];
+			double[][] trainBatchOutputs = new double[batchSize][results];
+			for (int b = 0; b < batchSize; b++) {
 
-					byte[] image = new byte[pixels];
-					isi.read(image);
-					byte[] label = new byte[1];
-					isl.read(label);
+				imagesProcessed++;
+				if (imagesProcessed > imageCount)
+					break;
 
-					for (int r = 0; r < rows; r++) {
-						for (int c = 0; c < cols; c++) {
-							int i = r * cols + c;
-							trainBatchInputs[b][i] = (image[i] & 0xFF) / 255.0;
-							trainBatchOutputs[b][label[0]] = 1;
-						}
+				byte[] image = new byte[pixels];
+				isi.read(image);
+				byte[] label = new byte[1];
+				isl.read(label);
+
+				for (int r = 0; r < rows; r++) {
+					for (int c = 0; c < cols; c++) {
+						int i = r * cols + c;
+						trainBatchInputs[b][i] = (image[i] & 0xFF) / 255.0;
+						trainBatchOutputs[b][label[0]] = 1;
 					}
-
 				}
-				net.train(trainBatchInputs, trainBatchOutputs, 0.8, 0.1);
-				System.out.println("Images processed " + imagesProcessed + "/" + imageCount);
+
 			}
+			while (net.getSuccessRate() < 50) {
+				net.train(trainBatchInputs, trainBatchOutputs, 0.8, 0.1);
+			}
+			System.out.println("Images processed " + imagesProcessed + "/" + imageCount);
 
 			net.writeConfig(new File("target/nnet.json"));
-
 		}
 
 	}

@@ -3,6 +3,7 @@ package cz.gattserver.nnet.net;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import cz.gattserver.nnet.matrix.Matrix;
 import cz.gattserver.nnet.matrix.MatrixUtils;
@@ -85,6 +86,8 @@ public class NNet {
 
 		int L = layersSizes.length - 1;
 
+		BigDecimal errorSum = BigDecimal.ZERO;
+
 		// pro každý příklad z dávky
 		for (int b = 0; b < batchSize; b++) {
 
@@ -118,15 +121,19 @@ public class NNet {
 			triesCount++;
 
 			// C = 1/2 * sum_j((y_j - a_j^L)^2)
-			double cost = 0;
+			BigDecimal cost = BigDecimal.ZERO;
 			for (int j = 0; j < layersSizes[L]; j++)
-				cost += Math.pow(target.get(j, 0) - activations[b][L].get(j, 0), 2);
-			cost /= 2;
+				cost = cost.add(target.get(j, 0).subtract(activations[b][L].get(j, 0)).pow(2));
+			cost = cost.divide(new BigDecimal(2));
+
+			errorSum = errorSum.add(cost);
 
 			// učení
-			if (cost < maxError)
+			if (cost.compareTo(new BigDecimal(maxError)) < 0)
 				successCount++;
 		}
+
+		BigDecimal batchAverageError = errorSum.divide(new BigDecimal(batchSize));
 
 		// aktualizuj váhy a biasy
 		for (int l = L; l > 0; l--) {
@@ -143,9 +150,12 @@ public class NNet {
 
 			weights[l] = weights[l].subtract(weightsDeltaSumMatrix);
 			biases[l] = biases[l].subtract(biasesDeltaSumVector);
+
 		}
 
-		System.out.println(String.format("%.1f", getSuccessRate()) + "% cycle: " + triesCount);
+		// System.out.println(String.format("%.1f", getSuccessRate()) + "%
+		// cycle: " + triesCount);
+		System.out.println("Batch average error: " + batchAverageError.toString() + " cycle: " + triesCount);
 	}
 
 	private void write(FileWriter fileWriter, String value) throws IOException {
@@ -153,7 +163,7 @@ public class NNet {
 		fileWriter.write(",");
 	}
 
-	private void writeArray(FileWriter fileWriter, double[] array) throws IOException {
+	private void writeArray(FileWriter fileWriter, BigDecimal[] array) throws IOException {
 		fileWriter.write("[");
 		for (int i = 0; i < array.length; i++) {
 			if (i != 0)

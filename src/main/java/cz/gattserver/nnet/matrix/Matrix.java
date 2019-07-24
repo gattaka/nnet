@@ -1,23 +1,25 @@
 package cz.gattserver.nnet.matrix;
 
+import java.math.BigDecimal;
+
 public class Matrix {
 
 	private int rows = 0;
 	private int cols = 0;
-	private double data[][];
+	private BigDecimal data[][];
 
 	public static interface MapFunc {
-		double map(double value);
+		BigDecimal map(BigDecimal value);
 	}
 
 	public Matrix(int rows, int cols) {
 		this.rows = rows;
 		this.cols = cols;
 		// indexově jsou nejprve řádky, pak sloupce
-		data = new double[rows][cols];
+		data = new BigDecimal[rows][cols];
 		for (int r = 0; r < rows; r++)
 			for (int c = 0; c < cols; c++)
-				data[r][c] = 0;
+				data[r][c] = BigDecimal.ZERO;
 	}
 
 	private void checkDimensions(int row, int col) {
@@ -42,8 +44,8 @@ public class Matrix {
 		}
 	}
 
-	public double[] toArray() {
-		double result[] = new double[rows * cols];
+	public BigDecimal[] toArray() {
+		BigDecimal[] result = new BigDecimal[rows * cols];
 		for (int r = 0; r < rows; r++)
 			for (int c = 0; c < cols; c++)
 				result[r * cols + c] = data[r][c];
@@ -58,14 +60,18 @@ public class Matrix {
 		return cols;
 	}
 
-	public double get(int row, int col) {
+	public BigDecimal get(int row, int col) {
 		checkDimensions(row, col);
 		return data[row][col];
 	}
 
-	public void set(int row, int col, double value) {
+	public void set(int row, int col, BigDecimal value) {
 		checkDimensions(row, col);
 		data[row][col] = value;
+	}
+
+	public void set(int row, int col, double value) {
+		set(row, col, new BigDecimal(value));
 	}
 
 	public Matrix add(Matrix m) {
@@ -75,8 +81,10 @@ public class Matrix {
 			throw new IllegalArgumentException("A and B has different number of rows");
 		Matrix result = new Matrix(rows, cols);
 		for (int r = 0; r < rows; r++)
-			for (int c = 0; c < cols; c++)
-				result.set(r, c, data[r][c] + m.get(r, c));
+			for (int c = 0; c < cols; c++) {
+				BigDecimal value = data[r][c].add(m.get(r, c));
+				result.set(r, c, value);
+			}
 		return result;
 	}
 
@@ -88,8 +96,10 @@ public class Matrix {
 	public Matrix addScalar(double n) {
 		Matrix result = new Matrix(rows, cols);
 		for (int r = 0; r < rows; r++)
-			for (int c = 0; c < cols; c++)
-				result.set(r, c, data[r][c] + n);
+			for (int c = 0; c < cols; c++) {
+				BigDecimal value = data[r][c].add(new BigDecimal(n));
+				result.set(r, c, value);
+			}
 		return result;
 	}
 
@@ -99,9 +109,9 @@ public class Matrix {
 		Matrix result = new Matrix(rows, m.getCols());
 		for (int r = 0; r < result.getRows(); r++) {
 			for (int c = 0; c < result.getCols(); c++) {
-				double sum = 0;
+				BigDecimal sum = BigDecimal.ZERO;
 				for (int i = 0; i < cols; i++)
-					sum += data[r][i] * m.get(i, c);
+					sum = sum.add(data[r][i].multiply(m.get(i, c)));
 				result.set(r, c, sum);
 			}
 		}
@@ -115,24 +125,30 @@ public class Matrix {
 			throw new IllegalArgumentException("A.B requires A.cols = B.cols");
 		Matrix result = new Matrix(rows, cols);
 		for (int r = 0; r < result.getRows(); r++)
-			for (int c = 0; c < result.getCols(); c++)
-				result.set(r, c, data[r][c] * m.get(r, c));
+			for (int c = 0; c < result.getCols(); c++) {
+				BigDecimal value = data[r][c].multiply(m.get(r, c));
+				result.set(r, c, value);
+			}
 		return result;
 	}
 
 	public Matrix multiplyByScalar(double n) {
 		Matrix result = new Matrix(rows, cols);
 		for (int r = 0; r < rows; r++)
-			for (int c = 0; c < cols; c++)
-				result.set(r, c, data[r][c] * n);
+			for (int c = 0; c < cols; c++) {
+				BigDecimal value = data[r][c].multiply(new BigDecimal(n));
+				result.set(r, c, value);
+			}
 		return result;
 	}
 
 	public Matrix map(MapFunc func) {
 		Matrix result = new Matrix(rows, cols);
 		for (int r = 0; r < rows; r++)
-			for (int c = 0; c < cols; c++)
-				result.set(r, c, func.map(data[r][c]));
+			for (int c = 0; c < cols; c++) {
+				BigDecimal value = func.map(data[r][c]);
+				result.set(r, c, value);
+			}
 		return result;
 	}
 

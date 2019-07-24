@@ -1,8 +1,10 @@
 package cz.gattserver.nnet.net;
 
+import java.math.BigDecimal;
+
 public interface ActivationFunction {
 
-	double activate(double potential);
+	BigDecimal activate(BigDecimal potential);
 
-	double activatePrime(double potential);
+	BigDecimal activatePrime(BigDecimal potential);
 }
