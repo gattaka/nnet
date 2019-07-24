@@ -1,11 +1,14 @@
 package cz.gattserver.nnet;
 
+import java.io.File;
+import java.io.IOException;
+
 import cz.gattserver.nnet.net.NNet;
 import cz.gattserver.nnet.net.SmoothReLU;
 
 public class Main {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 		int imgSide = 4;
 		int pixels = imgSide * imgSide;
@@ -13,7 +16,7 @@ public class Main {
 
 		NNet net = new NNet(new int[] { pixels, pixels, 2 }, new SmoothReLU());
 
-		for (int i = 0; i < 90000; i++) {
+		while (net.getSuccessRate() < 18) {
 			double[][] trainBatchInputs = new double[batchSize][16];
 			double[][] trainBatchOutputs = new double[batchSize][2];
 			for (int b = 0; b < batchSize; b++) {
@@ -30,6 +33,7 @@ public class Main {
 			net.train(trainBatchInputs, trainBatchOutputs, 0.8, 0.1);
 		}
 
+		net.writeConfig(new File("target/nnet.json"));
 	}
 
 }

@@ -1,5 +1,9 @@
 package cz.gattserver.nnet.net;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import cz.gattserver.nnet.matrix.Matrix;
 import cz.gattserver.nnet.matrix.MatrixUtils;
 
@@ -141,10 +145,39 @@ public class NNet {
 			biases[l] = biases[l].subtract(biasesDeltaSumVector);
 		}
 
-		System.out.println(getSuccessRate());
+		System.out.println(String.format("%.1f", getSuccessRate()) + "% cycle: " + triesCount);
+	}
+
+	private void write(FileWriter fileWriter, String value) throws IOException {
+		fileWriter.write(value);
+		fileWriter.write(",");
+	}
+
+	private void writeArray(FileWriter fileWriter, double[] array) throws IOException {
+		fileWriter.write("[");
+		for (int i = 0; i < array.length; i++) {
+			if (i != 0)
+				fileWriter.write(",");
+			fileWriter.write(String.valueOf(array[i]));
+		}
+		fileWriter.write("]");
+	}
+
+	public void writeConfig(File file) throws IOException {
+		try (FileWriter fileWriter = new FileWriter(file)) {
+			write(fileWriter, String.valueOf(layersSizes.length));
+			for (int l = 1; l < layersSizes.length; l++)
+				write(fileWriter, String.valueOf(layersSizes[l]));
+			for (int l = 1; l < layersSizes.length; l++) {
+				writeArray(fileWriter, weights[l].toArray());
+				writeArray(fileWriter, biases[l].toArray());
+			}
+		}
 	}
 
 	public double getSuccessRate() {
+		if (triesCount == 0)
+			return 0;
 		return (double) successCount / triesCount * 100;
 	}
 
