@@ -1,7 +1,9 @@
 package cz.gattserver.nnet;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import cz.gattserver.nnet.net.NNet;
 import cz.gattserver.nnet.net.SmoothReLU;
@@ -10,30 +12,97 @@ public class Main {
 
 	public static void main(String[] args) throws IOException {
 
-		int imgSide = 4;
-		int pixels = imgSide * imgSide;
-		int batchSize = 100;
+		File trainImages = new File("train-images.idx3-ubyte");
+		File trainLabels = new File("train-labels.idx1-ubyte");
+		try (FileInputStream isi = new FileInputStream(trainImages);
+				FileInputStream isl = new FileInputStream(trainLabels)) {
 
-		NNet net = new NNet(new int[] { pixels, pixels, 2 }, new SmoothReLU());
+			// magic number
+			byte[] buffer = new byte[4];
+			isi.read(buffer);
+			int magicNumber = ByteBuffer.wrap(buffer).getInt();
+			if (magicNumber != 0x00000803)
+				throw new IllegalArgumentException("Invalid Magic number of images file (should be 0x00000803)");
 
-		while (net.getSuccessRate() < 18) {
-			double[][] trainBatchInputs = new double[batchSize][16];
-			double[][] trainBatchOutputs = new double[batchSize][2];
-			for (int b = 0; b < batchSize; b++) {
-				boolean vertical = Math.random() > 0.5;
-				trainBatchOutputs[b][0] = vertical ? 1 : 0;
-				trainBatchOutputs[b][1] = vertical ? 0 : 1;
-				int coord = (int) (Math.random() * imgSide);
-				for (int p = 0; p < pixels; p++) {
-					int x = p % imgSide;
-					int y = (int) (p / imgSide);
-					trainBatchInputs[b][p] = (vertical && x == coord || !vertical && y == coord) ? 1 : 0;
+			isl.read(buffer);
+			magicNumber = ByteBuffer.wrap(buffer).getInt();
+			if (magicNumber != 0x00000801)
+				throw new IllegalArgumentException("Invalid Magic number of images file (should be 0x00000803)");
+
+			// number of images
+			isi.read(buffer);
+			long imageCount = 0;
+			imageCount |= buffer[0] & 0xFF;
+			imageCount <<= 8;
+			imageCount |= buffer[1] & 0xFF;
+			imageCount <<= 8;
+			imageCount |= buffer[2] & 0xFF;
+			imageCount <<= 8;
+			imageCount |= buffer[3] & 0xFF;
+
+			isl.read(buffer);
+			long labelsCount = 0;
+			labelsCount |= buffer[0] & 0xFF;
+			labelsCount <<= 8;
+			labelsCount |= buffer[1] & 0xFF;
+			labelsCount <<= 8;
+			labelsCount |= buffer[2] & 0xFF;
+			labelsCount <<= 8;
+			labelsCount |= buffer[3] & 0xFF;
+			if (imageCount != labelsCount)
+				throw new IllegalArgumentException("Image count and labels count must be the same");
+
+			System.out.println("Image count: " + imageCount);
+
+			// rows
+			isi.read(buffer);
+			int rows = ByteBuffer.wrap(buffer).getInt();
+
+			// cols
+			isi.read(buffer);
+			int cols = ByteBuffer.wrap(buffer).getInt();
+			System.out.println("Image dimensions: " + rows + "x" + cols);
+
+			int pixels = rows * cols;
+			int batchSize = 100;
+
+			int results = 10;
+
+			NNet net = new NNet(new int[] { pixels, results * 2, results * 2, results }, new SmoothReLU());
+
+			int imagesProcessed = 0;
+			
+			while (imagesProcessed < imageCount) {
+				double[][] trainBatchInputs = new double[batchSize][pixels];
+				double[][] trainBatchOutputs = new double[batchSize][results];
+				for (int b = 0; b < batchSize; b++) {
+
+					imagesProcessed++;
+					if (imagesProcessed > imageCount)
+						break;
+
+					byte[] image = new byte[pixels];
+					isi.read(image);
+					byte[] label = new byte[1];
+					isl.read(label);
+
+					for (int r = 0; r < rows; r++) {
+						for (int c = 0; c < cols; c++) {
+							int i = r * cols + c;
+							trainBatchInputs[b][i] = (image[i] & 0xFF) / 255.0;
+							trainBatchOutputs[b][label[0]] = 1;
+						}
+					}
+
 				}
+				net.train(trainBatchInputs, trainBatchOutputs, 0.8, 0.1);
+				System.out.println("Images processed " + imagesProcessed + "/" + imageCount);
 			}
-			net.train(trainBatchInputs, trainBatchOutputs, 0.8, 0.1);
+
+			net.writeConfig(new File("target/nnet.json"));
+
 		}
 
-		net.writeConfig(new File("target/nnet.json"));
 	}
 
 }
