@@ -69,7 +69,7 @@ public class Main {
 			int results = 10;
 
 			double sensitivity = 0.8;
-			NNet net = new NNet(new int[] { pixels, results * 2, results }, new Sigmoid(),
+			NNet net = new NNet(new int[] { pixels, results * 4, results }, new Sigmoid(),
 					(Matrix target, Matrix result) -> {
 						if (target.getRows() != result.getRows() || target.getCols() != 1 || result.getCols() != 1)
 							throw new IllegalStateException("Target and result must have same rows a 1 column");
