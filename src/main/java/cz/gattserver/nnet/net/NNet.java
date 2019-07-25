@@ -19,13 +19,16 @@ public class NNet {
 
 	private int triesCount = 0;
 	private int successCount = 0;
-	private double batchAverageError;
+	private double batchAverageSuccess;
 
 	private ActivationFunction activationFunction;
 
-	public NNet(int[] layersSizes, ActivationFunction activationFunction) {
+	private SuccessCheck successCheck;
+
+	public NNet(int[] layersSizes, ActivationFunction activationFunction, SuccessCheck successCheck) {
 		this.layersSizes = layersSizes;
 		this.activationFunction = activationFunction;
+		this.successCheck = successCheck;
 
 		weights = new Matrix[layersSizes.length];
 		biases = new Matrix[layersSizes.length];
@@ -74,7 +77,7 @@ public class NNet {
 		return activations[layersSizes.length - 1];
 	}
 
-	public void train(double[][] trainBatchInputs, double[][] trainBatchOutputs, double sensitivity, double maxError) {
+	public void train(double[][] trainBatchInputs, double[][] trainBatchOutputs, double sensitivity) {
 		int batchSize = trainBatchInputs.length;
 
 		// pole vektorů potenciálů dle vrstvy
@@ -86,8 +89,8 @@ public class NNet {
 
 		int L = layersSizes.length - 1;
 
-		double errorSum = 0;
-
+		double batchSuccessCount = 0;
+		
 		// pro každý příklad z dávky
 		for (int b = 0; b < batchSize; b++) {
 
@@ -121,19 +124,21 @@ public class NNet {
 			triesCount++;
 
 			// C = 1/2 * sum_j((y_j - a_j^L)^2)
-			double cost = 0;
-			for (int j = 0; j < layersSizes[L]; j++)
-				cost += Math.pow(target.get(j, 0) - activations[b][L].get(j, 0), 2);
-			cost /= 2;
-
-			errorSum += cost;
+			/**
+			 * double cost = 0; for (int j = 0; j < layersSizes[L]; j++) cost += Math.pow(target.get(j, 0) -
+			 * activations[b][L].get(j, 0), 2); cost /= 2;
+			 * 
+			 * errorSum += cost;
+			 */
 
 			// učení
-			if (cost < maxError)
+			if (successCheck.isSuccess(target, activations[b][L])) {
 				successCount++;
+				batchSuccessCount++;
+			}
 		}
 
-		batchAverageError = errorSum / batchSize;
+		batchAverageSuccess = batchSuccessCount / batchSize * 100;
 
 		// aktualizuj váhy a biasy
 		for (int l = L; l > 0; l--) {
@@ -154,7 +159,7 @@ public class NNet {
 		}
 
 		System.out.println("Cycle: " + triesCount + " Success rate: " + String.format("%.1f", getSuccessRate())
-				+ "% Batch average error: " + String.format("%.3f", batchAverageError));
+				+ "% Batch average success: " + String.format("%.1f", batchAverageSuccess) + "%");
 	}
 
 	private void write(FileWriter fileWriter, String value) throws IOException {
@@ -189,8 +194,7 @@ public class NNet {
 		return (double) successCount / triesCount * 100;
 	}
 
-	public double getBatchAverageError() {
-		return batchAverageError;
+	public double getBatchAverageSuccess() {
+		return batchAverageSuccess;
 	}
-
 }
