@@ -1,19 +1,15 @@
 package cz.gattserver.nnet.net;
 
-import java.math.BigDecimal;
-
 public class Sigmoid implements ActivationFunction {
 
 	@Override
-	public BigDecimal activate(BigDecimal potential) {
-		BigDecimal result = new BigDecimal(1 / (1 + Math.pow(Math.E, -potential.doubleValue())));
-		return result;
+	public double activate(double potential) {
+		return 1 / (1 + Math.pow(Math.E, -potential));
 	}
 
 	@Override
-	public BigDecimal activatePrime(BigDecimal potential) {
-		BigDecimal result = activate(potential).multiply(BigDecimal.ONE.subtract(activate(potential)));
-		return result;
+	public double activatePrime(double potential) {
+		return activate(potential) * (1 - activate(potential));
 	}
 
 }

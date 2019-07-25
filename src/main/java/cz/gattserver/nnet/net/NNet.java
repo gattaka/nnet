@@ -86,7 +86,7 @@ public class NNet {
 
 		int L = layersSizes.length - 1;
 
-		BigDecimal errorSum = BigDecimal.ZERO;
+		double errorSum = 0;
 
 		// pro každý příklad z dávky
 		for (int b = 0; b < batchSize; b++) {
@@ -121,19 +121,19 @@ public class NNet {
 			triesCount++;
 
 			// C = 1/2 * sum_j((y_j - a_j^L)^2)
-			BigDecimal cost = BigDecimal.ZERO;
+			double cost = 0;
 			for (int j = 0; j < layersSizes[L]; j++)
-				cost = cost.add(target.get(j, 0).subtract(activations[b][L].get(j, 0)).pow(2));
-			cost = cost.divide(new BigDecimal(2));
+				cost += Math.pow(target.get(j, 0) - activations[b][L].get(j, 0), 2);
+			cost /= 2;
 
-			errorSum = errorSum.add(cost);
+			errorSum += cost;
 
 			// učení
-			if (cost.compareTo(new BigDecimal(maxError)) < 0)
+			if (cost < maxError)
 				successCount++;
 		}
 
-		BigDecimal batchAverageError = errorSum.divide(new BigDecimal(batchSize));
+		double batchAverageError = errorSum / batchSize;
 
 		// aktualizuj váhy a biasy
 		for (int l = L; l > 0; l--) {
@@ -153,9 +153,8 @@ public class NNet {
 
 		}
 
-		// System.out.println(String.format("%.1f", getSuccessRate()) + "%
-		// cycle: " + triesCount);
-		System.out.println("Batch average error: " + batchAverageError.toString() + " cycle: " + triesCount);
+		System.out.println("Cycle: " + triesCount + " Success rate: " + String.format("%.1f", getSuccessRate())
+				+ "% Batch average error: " + String.format("%.3f", batchAverageError));
 	}
 
 	private void write(FileWriter fileWriter, String value) throws IOException {
@@ -163,7 +162,7 @@ public class NNet {
 		fileWriter.write(",");
 	}
 
-	private void writeArray(FileWriter fileWriter, BigDecimal[] array) throws IOException {
+	private void writeArray(FileWriter fileWriter, double[] array) throws IOException {
 		fileWriter.write("[");
 		for (int i = 0; i < array.length; i++) {
 			if (i != 0)
