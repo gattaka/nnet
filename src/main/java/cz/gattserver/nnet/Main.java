@@ -112,7 +112,8 @@ public class Main {
 
 				net.train(batchInputs, batchOutputs, 0.8, 0.4);
 				batchId = (batchId + 1) % batchCount;
-			} while (net.getBatchAverageError() > 0.1);
+			//} while (net.getBatchAverageError() > 0.1);
+			} while (net.getSuccessRate() < 99);
 			net.writeConfig(new File("target/nnet.json"));
 		}
 
