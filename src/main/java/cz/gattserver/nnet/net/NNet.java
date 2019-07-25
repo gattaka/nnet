@@ -3,7 +3,6 @@ package cz.gattserver.nnet.net;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
 
 import cz.gattserver.nnet.matrix.Matrix;
 import cz.gattserver.nnet.matrix.MatrixUtils;
@@ -20,6 +19,7 @@ public class NNet {
 
 	private int triesCount = 0;
 	private int successCount = 0;
+	private double batchAverageError;
 
 	private ActivationFunction activationFunction;
 
@@ -133,7 +133,7 @@ public class NNet {
 				successCount++;
 		}
 
-		double batchAverageError = errorSum / batchSize;
+		batchAverageError = errorSum / batchSize;
 
 		// aktualizuj váhy a biasy
 		for (int l = L; l > 0; l--) {
@@ -187,6 +187,10 @@ public class NNet {
 		if (triesCount == 0)
 			return 0;
 		return (double) successCount / triesCount * 100;
+	}
+
+	public double getBatchAverageError() {
+		return batchAverageError;
 	}
 
 }
