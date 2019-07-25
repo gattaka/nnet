@@ -12,7 +12,6 @@ import cz.gattserver.nnet.net.Sigmoid;
 public class Main {
 
 	public static void main(String[] args) throws IOException {
-
 		File trainImages = new File("train-images.idx3-ubyte");
 		File trainLabels = new File("train-labels.idx1-ubyte");
 		try (FileInputStream isi = new FileInputStream(trainImages);
@@ -69,6 +68,7 @@ public class Main {
 
 			int results = 10;
 
+			double sensitivity = 0.8;
 			NNet net = new NNet(new int[] { pixels, results * 2, results }, new Sigmoid(),
 					(Matrix target, Matrix result) -> {
 						if (target.getRows() != result.getRows() || target.getCols() != 1 || result.getCols() != 1)
@@ -137,11 +137,10 @@ public class Main {
 					batchOutputs = trainBatchOutputs[rnd];
 				}
 
-				net.train(batchInputs, batchOutputs, 0.8);
+				net.train(batchInputs, batchOutputs, sensitivity);
 				batchId = (batchId + 1) % batchCount;
 				net.writeConfig(new File(fileSwitch ? "target/nnet.json" : "target/nnet2.json"));
 				fileSwitch = !fileSwitch;
-				// } while (net.getBatchAverageError() > 0.1);
 			} while (net.getSuccessRate() < 99);
 
 		}

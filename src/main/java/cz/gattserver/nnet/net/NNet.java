@@ -20,7 +20,7 @@ public class NNet {
 	private int triesCount = 0;
 	private int successCount = 0;
 	private double batchAverageSuccess;
-
+	
 	private ActivationFunction activationFunction;
 
 	private SuccessCheck successCheck;
@@ -158,8 +158,8 @@ public class NNet {
 
 		}
 
-		System.out.println("Cycle: " + triesCount + " Success rate: " + String.format("%.1f", getSuccessRate())
-				+ "% Batch average success: " + String.format("%.1f", batchAverageSuccess) + "%");
+		System.out.println("Cycle: " + triesCount + " Overall success: " + String.format("%.1f", getSuccessRate())
+				+ "% Batch success: " + String.format("%.1f", batchAverageSuccess) + "%");
 	}
 
 	private void write(FileWriter fileWriter, String value) throws IOException {
