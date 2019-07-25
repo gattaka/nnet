@@ -101,7 +101,7 @@ public class Main {
 			}
 
 			batchId = 0;
-			while (net.getSuccessRate() < 99) {
+			while (net.getSuccessRate() < 78) {
 				double[][] batchInputs = new double[batchSize][pixels];
 				double[][] batchOutputs = new double[batchSize][results];
 				for (int b = 0; b < batchSize; b++) {
@@ -112,8 +112,8 @@ public class Main {
 
 				net.train(batchInputs, batchOutputs, 0.8, 0.4);
 				batchId = (batchId + 1) % batchCount;
-				net.writeConfig(new File("target/nnet.json"));
 			}			
+			net.writeConfig(new File("target/nnet.json"));
 		}
 
 	}

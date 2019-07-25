@@ -159,17 +159,16 @@ public class NNet {
 
 	private void write(FileWriter fileWriter, String value) throws IOException {
 		fileWriter.write(value);
-		fileWriter.write(",");
+		fileWriter.write(";");
 	}
 
 	private void writeArray(FileWriter fileWriter, double[] array) throws IOException {
-		fileWriter.write("[");
 		for (int i = 0; i < array.length; i++) {
 			if (i != 0)
 				fileWriter.write(",");
 			fileWriter.write(String.valueOf(array[i]));
 		}
-		fileWriter.write("]");
+		fileWriter.write(";");
 	}
 
 	public void writeConfig(File file) throws IOException {
