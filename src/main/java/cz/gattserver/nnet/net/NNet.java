@@ -20,9 +20,9 @@ public class NNet {
 	private int triesCount = 0;
 	private int successCount = 0;
 	private double batchAverageSuccess;
-	
-	private ActivationFunction activationFunction;
 
+	private ActivationFunction activationFunction;
+	private OutputActivationFunction outputActivationFunction;
 	private SuccessCheck successCheck;
 
 	public NNet(int[] layersSizes, ActivationFunction activationFunction, SuccessCheck successCheck) {
@@ -61,6 +61,19 @@ public class NNet {
 				layerBiases.set(row, 0, Math.random() * 2 - 1);
 			}
 		}
+
+		outputActivationFunction = new OutputActivationFunction() {
+
+			@Override
+			public Matrix activatePrime(Matrix potential) {
+				return potential.map(activationFunction::activatePrime);
+			}
+
+			@Override
+			public Matrix activate(Matrix potential) {
+				return potential.map(activationFunction::activate);
+			}
+		};
 	}
 
 	public Matrix guess(Matrix inputs) {
@@ -71,8 +84,12 @@ public class NNet {
 		for (int l = 1; l < layersSizes.length; l++) {
 			// z^l = w^l . a^(l-1) + b^l
 			potentials[l] = weights[l].multiply(activations[l - 1]).add(biases[l]);
-			// a^l = sigma(z^l)
-			activations[l] = potentials[l].map(activationFunction::activate);
+			if (l == layersSizes.length - 1) {
+				activations[l] = outputActivationFunction.activate(potentials[l]);
+			} else {
+				// a^l = sigma(z^l)
+				activations[l] = potentials[l].map(activationFunction::activate);
+			}
 		}
 		return activations[layersSizes.length - 1];
 	}
@@ -90,7 +107,7 @@ public class NNet {
 		int L = layersSizes.length - 1;
 
 		double batchSuccessCount = 0;
-		
+
 		// pro každý příklad z dávky
 		for (int b = 0; b < batchSize; b++) {
 
@@ -104,29 +121,35 @@ public class NNet {
 			for (int l = 1; l < layersSizes.length; l++) {
 				// z^l = w^l . a^(l-1) + b^l
 				potentials[l] = weights[l].multiply(activations[b][l - 1]).add(biases[l]);
-				// a^l = sigma(z^l)
-				activations[b][l] = potentials[l].map(activationFunction::activate);
+
+				if (l == layersSizes.length - 1) {
+					activations[b][l] = outputActivationFunction.activate(potentials[l]);
+				} else {
+					// a^l = sigma(z^l)
+					activations[b][l] = potentials[l].map(activationFunction::activate);
+				}
 			}
 
 			// chyba výsledné vrstvy
 			// delta^L = (a^L - y) o sigma'(z^L)
 			errors[b][L] = activations[b][L].subtract(target)
-					.multiplyHadamard(potentials[L].map(activationFunction::activatePrime));
+					.multiplyHadamard(outputActivationFunction.activatePrime(potentials[L]));
 
 			// chyby vnitřních vrstev
 			for (int l = L - 1; l > 0; l--) {
 				// l = L - 1, L - 2, ..., 2 (1. je vstup)
 				// delta^l = ((w^(l+1))^T . delta^(l+1)) o sigma'(z^l)
 				errors[b][l] = weights[l + 1].transpose().multiply(errors[b][l + 1])
-						.multiplyHadamard(potentials[l].map(activationFunction::activate));
+						.multiplyHadamard(potentials[l].map(activationFunction::activatePrime));
 			}
 
 			triesCount++;
 
 			// C = 1/2 * sum_j((y_j - a_j^L)^2)
 			/**
-			 * double cost = 0; for (int j = 0; j < layersSizes[L]; j++) cost += Math.pow(target.get(j, 0) -
-			 * activations[b][L].get(j, 0), 2); cost /= 2;
+			 * double cost = 0; for (int j = 0; j < layersSizes[L]; j++) cost +=
+			 * Math.pow(target.get(j, 0) - activations[b][L].get(j, 0), 2); cost
+			 * /= 2;
 			 * 
 			 * errorSum += cost;
 			 */
@@ -196,5 +219,9 @@ public class NNet {
 
 	public double getBatchAverageSuccess() {
 		return batchAverageSuccess;
+	}
+
+	public void setOutputActivationFunction(OutputActivationFunction outputActivationFunction) {
+		this.outputActivationFunction = outputActivationFunction;
 	}
 }
