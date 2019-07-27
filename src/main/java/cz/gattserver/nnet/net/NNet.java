@@ -81,6 +81,7 @@ public class NNet {
 		Matrix[] potentials = new Matrix[layersSizes.length];
 		// pole vektorů aktivací dle vrstvy
 		Matrix[] activations = new Matrix[layersSizes.length];
+		activations[0] = inputs;
 		for (int l = 1; l < layersSizes.length; l++) {
 			// z^l = w^l . a^(l-1) + b^l
 			potentials[l] = weights[l].multiply(activations[l - 1]).add(biases[l]);
@@ -223,5 +224,13 @@ public class NNet {
 
 	public void setOutputActivationFunction(OutputActivationFunction outputActivationFunction) {
 		this.outputActivationFunction = outputActivationFunction;
+	}
+
+	public void setWeights(int layer, Matrix weights) {
+		this.weights[layer] = weights;
+	}
+
+	public void setBiases(int layer, Matrix biases) {
+		this.biases[layer] = biases;
 	}
 }
