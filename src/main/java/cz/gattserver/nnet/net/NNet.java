@@ -17,6 +17,8 @@ public class NNet {
 	// pole vektorů biasů dle vrstvy
 	private Matrix[] biases;
 
+	private double errorSum;
+
 	private int triesCount = 0;
 	private int successCount = 0;
 	private double batchAverageSuccess;
@@ -147,13 +149,12 @@ public class NNet {
 			triesCount++;
 
 			// C = 1/2 * sum_j((y_j - a_j^L)^2)
-			/**
-			 * double cost = 0; for (int j = 0; j < layersSizes[L]; j++) cost +=
-			 * Math.pow(target.get(j, 0) - activations[b][L].get(j, 0), 2); cost
-			 * /= 2;
-			 * 
-			 * errorSum += cost;
-			 */
+			double cost = 0;
+			for (int j = 0; j < layersSizes[L]; j++)
+				cost += Math.pow(target.get(j, 0) - activations[b][L].get(j, 0), 2);
+			cost /= 2;
+
+			errorSum += cost;
 
 			// učení
 			if (successCheck.isSuccess(target, activations[b][L])) {
@@ -183,7 +184,8 @@ public class NNet {
 		}
 
 		System.out.println("Cycle: " + triesCount + " Overall success: " + String.format("%.1f", getSuccessRate())
-				+ "% Batch success: " + String.format("%.1f", batchAverageSuccess) + "%");
+				+ "% Batch success: " + String.format("%.1f", batchAverageSuccess) + "% Error: "
+				+ String.format("%.3f", getError()));
 	}
 
 	private void write(FileWriter fileWriter, String value) throws IOException {
@@ -210,6 +212,12 @@ public class NNet {
 				writeArray(fileWriter, biases[l].toArray());
 			}
 		}
+	}
+
+	public double getError() {
+		if (triesCount == 0)
+			return 0;
+		return errorSum / triesCount;
 	}
 
 	public double getSuccessRate() {

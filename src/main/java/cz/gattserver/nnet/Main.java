@@ -139,8 +139,7 @@ public class Main {
 				net.train(batchInputs, batchOutputs, sensitivity);
 				net.writeConfig(new File(fileSwitch ? "target/nnet.json" : "target/nnet2.json"));
 				fileSwitch = !fileSwitch;
-				// } while (net.getBatchAverageSuccess() < 95);
-			} while (net.getSuccessRate() < 95);
+			} while (net.getSuccessRate() < 99 || net.getError() > 0.1);
 
 		}
 
@@ -246,7 +245,7 @@ public class Main {
 
 			double success = 0;
 
-			for (int imgId = 0; imgId < imageCount; imgId++) {
+			for (int i = 0; i < imageCount; i++) {
 
 				byte[] label = new byte[1];
 				testLblStream.read(label);
@@ -259,15 +258,20 @@ public class Main {
 				for (int r = 0; r < rows; r++) {
 					for (int c = 0; c < cols; c++) {
 						int index = r * cols + c;
-						input[index] = (image[index] & 0xFF) / 255.0;
+						int val = image[index] & 0xFF;
+						input[index] = val / 255.0;
+						// System.out.print(val + ";");
 					}
 				}
+				// System.out.println();
+				// System.out.println(label[0]);
 
 				Matrix guess = net.guess(MatrixUtils.fromFlatArray(pixels, 1, input));
 				Matrix target = MatrixUtils.fromFlatArray(results, 1, output);
 				if (check.isSuccess(target, guess))
 					success++;
 
+				int imgId = i + 1;
 				System.out.println("Images guessed " + imgId + "/" + imageCount + " success: "
 						+ String.format("%.1f", (success / imgId * 100)) + "%");
 			}
